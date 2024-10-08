@@ -24,8 +24,6 @@ String refreshToken;
 
 const String WiFi_SSID = "..."; //WiFi SSID
 const String WiFi_password = "..."; //WiFi hasło
-// const String WiFi_SSID = "Sases"; //WiFi SSID
-// const String WiFi_password = "zaq12wsx"; //WiFi hasło
 String WiFi_IP = ""; //WiFi IP uzupełniane po nawiązaniu połączenia
 
 String Mqtt_Server; //MQTT broker address
