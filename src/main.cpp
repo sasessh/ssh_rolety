@@ -8,24 +8,17 @@
 #include <Adafruit_MCP23X17.h>
 #include <OneWire.h>
 #include <DallasTemperature.h>
+#include "config.h"
 
 #define BUILT_LED 2
 
 Adafruit_MCP23X17 mcp;
 
-const String Device_ID = "11"; //ID urządzenia
 int Boot_Timestamp = 0; //czas uruchomienia (uniksowy)
 
-const String api_url = "...";
-const String api_username = "...";
-const String api_password = "...";
 String accessToken;
 String refreshToken;
 
-const String WiFi_SSID = "..."; //WiFi SSID
-const String WiFi_password = "..."; //WiFi hasło
-// const String WiFi_SSID = "Sases"; //WiFi SSID
-// const String WiFi_password = "zaq12wsx"; //WiFi hasło
 String WiFi_IP = ""; //WiFi IP uzupełniane po nawiązaniu połączenia
 
 String Mqtt_Server; //MQTT broker address
@@ -59,7 +52,7 @@ PubSubClient mqttClient(wifiClient);
 OneWire oneWire(15);
 DallasTemperature sensors(&oneWire);
 
-const String myHostname = "ssh_device_" + Device_ID;
+const String myHostname = "ssh_device_" + DEVICE_ID;
 typedef struct {int param;} TaskParams;
 
 void connectWiFi();
@@ -202,7 +195,7 @@ void connectWiFi()
   digitalWrite(BUILT_LED, LOW);
   WiFi.hostname(myHostname);
   WiFi.mode(WIFI_STA);
-  WiFi.begin(WiFi_SSID, WiFi_password);
+  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
   int attempt = 0;
   Serial.print("Connecting to WiFi ");
 
@@ -251,8 +244,8 @@ bool apiGetTokens()
 { // pobierane tokenów uwierzytelniających API
   if(WiFi.status() == WL_CONNECTED)
   {
-    String url = api_url + "/token/";
-    String payload = "{\"username\":\"" + api_username + "\",\"password\":\"" + api_password + "\"}";
+    String url = API_URL + "/token/";
+    String payload = "{\"username\":\"" + API_USERNAME + "\",\"password\":\"" + API_PASSWORD + "\"}";
 
     HTTPClient httpClient;
     httpClient.begin(url);
@@ -292,7 +285,7 @@ bool apiRefreshToken()
 { // odświerzenie tokenu uwierzytelniającego API tokenem refresh
   if(WiFi.status() == WL_CONNECTED)
   {
-    String url = api_url + "/token/refresh/";
+    String url = API_URL + "/token/refresh/";
     String payload = "{\"refresh\":\"" + refreshToken + "\"}";
 
     HTTPClient httpClient;
@@ -332,7 +325,7 @@ bool apiGetConfig()
 { // pobranie dany  konfiguracyjnych przez API
   if(WiFi.status() == WL_CONNECTED)
   {
-    String url = api_url + "/configurations/1/";
+    String url = API_URL + "/configurations/1/";
     HTTPClient httpClient;
     httpClient.begin(url);
     httpClient.addHeader("Content-Type", "application/json");
@@ -401,7 +394,7 @@ bool apiGetBlinds()
 { // pobranie danych rolet przez API
   if(WiFi.status() == WL_CONNECTED)
   {
-    String url = api_url + "/blinds/";
+    String url = API_URL + "/blinds/";
     HTTPClient httpClient;
     httpClient.begin(url);
     httpClient.addHeader("Content-Type", "application/json");
@@ -499,12 +492,12 @@ void connectMqtt()
     Serial.println("Connecting to MQTT...");
 
     //willMessage:
-    String json = "{\"device\":{\"id\":" + Device_ID 
+    String json = "{\"device\":{\"id\":" + DEVICE_ID 
     + ",\"name\":\"" + myHostname 
     + "\",\"type\":\"" + ESP.getChipModel() 
     + "\",\"online\":false}}";
 
-    if (mqttClient.connect(myMqttName, Mqtt_User.c_str(), Mqtt_Password.c_str(), String("ssh/devices/status/" + Device_ID).c_str(), 1, true, json.c_str()))
+    if (mqttClient.connect(myMqttName, Mqtt_User.c_str(), Mqtt_Password.c_str(), String("ssh/devices/status/" + DEVICE_ID).c_str(), 1, true, json.c_str()))
     {
       Serial.println("Connected to MQTT");
       mqttClient.subscribe("ssh/blinds/set/#"); //kanał wiadomości nastawiania rolet
@@ -613,7 +606,7 @@ void systemStatus(void* parameters)
 
       //TODO stałe dane przesłać do API tylko raz - po połączeniu z WiFi
     
-      String json = "{\"device\":{\"id\":" + Device_ID 
+      String json = "{\"device\":{\"id\":" + DEVICE_ID 
       + ",\"name\":\"" + myHostname 
       // + "\",\"type\":\"" + ESP.getChipModel()
       + "\",\"online\":true"
@@ -634,7 +627,7 @@ void systemStatus(void* parameters)
       + "}}";
       // Serial.println(json);
       
-      String topic = "ssh/devices/status/" + String(Device_ID);
+      String topic = "ssh/devices/status/" + String(DEVICE_ID);
       int pub = mqttClient.publish(topic.c_str(), json.c_str(), true);
       if (!pub)
       {
@@ -754,7 +747,7 @@ void calibrateBlind(int id)
     vTaskDelay(pdMS_TO_TICKS(10));
     if(WiFi.status() == WL_CONNECTED)
     {
-      String url = api_url + "/blinds/" + String(Blinds_Id[id]) + "/";
+      String url = API_URL + "/blinds/" + String(Blinds_Id[id]) + "/";
       String payload = "{\"position\":0, \"runtime_up\": " + String(Blinds_Runtime_Up[id]) + ", \"runtime_down\": " + String(Blinds_Runtime_Down[id]) + "}";
 
       HTTPClient httpClient;
@@ -831,9 +824,6 @@ void publishBlinds(void* parameters)
           {
             Serial.println("MQTT publish fail!");
           }
-
-          //TODO API UPDATE
-
           vTaskDelay(pdMS_TO_TICKS(10));
         }
       }
@@ -875,7 +865,7 @@ void apiUpdatePosition(void* parameters)
       {
         if(WiFi.status() == WL_CONNECTED)
         {
-          String url = api_url + "/blinds/" + String(Blinds_Id[i]) + "/";
+          String url = API_URL + "/blinds/" + String(Blinds_Id[i]) + "/";
           String payload = "{\"position\":" + String(int(Blinds_Position[i])) + "}";
 
           HTTPClient httpClient;
