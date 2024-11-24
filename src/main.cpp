@@ -608,18 +608,19 @@ void systemStatus(void* parameters)
     
       String json = "{\"device\":{\"id\":" + DEVICE_ID 
       + ",\"name\":\"" + myHostname 
-      // + "\",\"type\":\"" + ESP.getChipModel()
+      + "\",\"type\":\"" + ESP.getChipModel()
       + "\",\"online\":true"
       + ",\"temperature:\":" + sensors.getTempCByIndex(0)
       + "},"
       + "\"wifi\":{\"ssid\":\"" + WiFi.SSID()
-      // + "\",\"hostname\":\"" + myHostname
-      // + "\",\"ip\":\"" + WiFi_IP
-      // + "\",\"mac\":\"" + WiFi.macAddress()
+      + "\",\"hostname\":\"" + myHostname
+      + "\",\"ip\":\"" + WiFi_IP
+      + "\",\"mac\":\"" + WiFi.macAddress()
       + "\",\"signal\":" + WiFi.RSSI()
       + "},"
-      + "\"cpu\":{\"cores\":" + ESP.getChipCores() 
-      // + ",\"mhz\":" + ESP.getCpuFreqMHz()
+      + "\"cpu\":{"
+      + "\"cores\":" + ESP.getChipCores() 
+      + ",\"mhz\":" + ESP.getCpuFreqMHz()
       + ",\"temperature\":" + temperatureRead() 
       + "},"
       + "\"meta\":{\"boottime\":" + Boot_Timestamp
